@@ -99,8 +99,44 @@ GitHub secrets required:
 
 Image: `<DOCKERHUB_USERNAME>/homedashboard:latest`
 
+## Environment / Dokploy
+
+The app reads:
+
+1. Process environment (Dokploy UI / Docker `environment`) — highest priority  
+2. Optional `.env` file (`ENV_FILE`, `/app/.env`, or cwd) — only fills missing keys  
+3. `appsettings.json` defaults
+
+Flat names (Dokploy-friendly) and ASP.NET `__` names both work.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `ADMIN_USERNAME` | yes* | Admin login (seeded on first start) |
+| `ADMIN_PASSWORD` | yes* | Admin password |
+| `JWT_KEY` | yes* | Secret for auth cookies (32+ chars) |
+| `DATABASE_HOST` | yes** | Postgres host |
+| `DATABASE_PORT` | no | Default `5432` |
+| `DATABASE_NAME` | no | Default `home_dashboard` |
+| `DATABASE_USER` | yes** | Postgres user |
+| `DATABASE_PASSWORD` | yes** | Postgres password |
+| `CONNECTION_STRING` | alt** | Full Npgsql string instead of DATABASE_* |
+| `UPLOADS_PATH` | no | Default `/app/uploads` |
+| `JWT_ISSUER` | no | Default `Home.Api` |
+| `JWT_AUDIENCE` | no | Default `Home.Web` |
+| `JWT_EXPIRE_HOURS` | no | Default `72` |
+| `ASPNETCORE_ENVIRONMENT` | no | `Production` / `Development` |
+| `ENV_FILE` | no | Path to `.env` inside container |
+| `PORT` | no | Host port for compose only (`8080`) |
+
+\* Change defaults in production.  
+\*\* Either `CONNECTION_STRING` **or** `DATABASE_*` (aliases: `POSTGRES_HOST`, `POSTGRES_DB`, …).
+
+Also accepted: `ConnectionStrings__Default`, `Admin__Username`, `Jwt__Key`, `Uploads__Path`.
+
+See [`.env.example`](.env.example).
+
 ## Notes
 
 - Uploaded files live in `uploads/` (Docker volume).
-- Change `ADMIN_PASSWORD` and `Jwt__Key` before exposing on a network.
+- Change `ADMIN_PASSWORD` and `JWT_KEY` before exposing on a network.
 - Weather uses public Open-Meteo APIs from the browser (no API key).

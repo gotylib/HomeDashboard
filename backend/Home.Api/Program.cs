@@ -1,4 +1,5 @@
 using System.Text;
+using Home.Api.Configuration;
 using Home.Api.Controllers;
 using Home.Api.Data;
 using Home.Api.Options;
@@ -7,6 +8,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+
+// Load .env before configuration is built (Dokploy mount / local file). Existing process env wins.
+EnvFileLoader.Load(
+    Environment.GetEnvironmentVariable("ENV_FILE") ?? "",
+    Path.Combine(Directory.GetCurrentDirectory(), ".env"),
+    Path.Combine(AppContext.BaseDirectory, ".env"),
+    "/app/.env");
+EnvAliases.Apply();
 
 var builder = WebApplication.CreateBuilder(args);
 

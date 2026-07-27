@@ -1,14 +1,17 @@
 services:
   db:
     image: postgres:16-alpine
+    env_file:
+      - path: .env
+        required: false
     environment:
-      POSTGRES_DB: home_dashboard
-      POSTGRES_USER: home
-      POSTGRES_PASSWORD: home
+      POSTGRES_DB: ${POSTGRES_DB:-home_dashboard}
+      POSTGRES_USER: ${POSTGRES_USER:-home}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-home}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U home -d home_dashboard"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,13 +25,24 @@ services:
       - "${PORT:-8080}:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    env_file:
+      - path: .env
+        required: false
     environment:
-      ASPNETCORE_ENVIRONMENT: Production
-      ConnectionStrings__Default: Host=db;Port=5432;Database=home_dashboard;Username=home;Password=home
-      Admin__Username: ${ADMIN_USERNAME:-admin}
-      Admin__Password: ${ADMIN_PASSWORD:-admin}
-      Jwt__Key: ${JWT_KEY:-home-dashboard-change-this-secret-key-32chars}
-      Uploads__Path: /app/uploads
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      JWT_KEY: ${JWT_KEY:-home-dashboard-change-this-secret-key-32chars}
+      JWT_ISSUER: ${JWT_ISSUER:-Home.Api}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-Home.Web}
+      JWT_EXPIRE_HOURS: ${JWT_EXPIRE_HOURS:-72}
+      DATABASE_HOST: ${DATABASE_HOST:-db}
+      DATABASE_PORT: ${DATABASE_PORT:-5432}
+      DATABASE_NAME: ${DATABASE_NAME:-home_dashboard}
+      DATABASE_USER: ${DATABASE_USER:-home}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-home}
+      UPLOADS_PATH: ${UPLOADS_PATH:-/app/uploads}
+      ENV_FILE: ${ENV_FILE:-/app/.env}
     volumes:
       - uploads:/app/uploads
     depends_on:
