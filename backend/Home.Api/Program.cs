@@ -109,7 +109,20 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        // Never cache the SPA shell — otherwise browsers keep an old index.html
+        // that points at a deleted JS bundle after image updates.
+        if (ctx.File.Name.Equals("index.html", StringComparison.OrdinalIgnoreCase))
+        {
+            ctx.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+            ctx.Context.Response.Headers.Pragma = "no-cache";
+            ctx.Context.Response.Headers.Expires = "0";
+        }
+    }
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

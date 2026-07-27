@@ -18,6 +18,9 @@ services:
     restart: unless-stopped
 
   app:
+    # Dokploy / registry: pull this image. Local: `docker compose build` still works.
+    image: ${DOCKER_IMAGE:-gotlib12345/homedashboard:latest}
+    pull_policy: always
     build:
       context: .
       dockerfile: Dockerfile
