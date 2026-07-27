@@ -72,7 +72,8 @@ export function DashboardGrid({
       compactType={null}
       preventCollision={false}
       onLayoutChange={onLayoutChange}
-      draggableCancel=".icon-btn,button,input,a"
+      draggableHandle=".drag-handle"
+      draggableCancel=".icon-btn,button,input,a,.folder-open-hit"
     >
       {items.map((item) => (
         <div key={`${item.kind}:${item.data.id}`}>

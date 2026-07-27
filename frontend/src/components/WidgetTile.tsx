@@ -32,6 +32,9 @@ export function WidgetTile({ widget, editing, onEdit, onDelete }: Props) {
     <div className={`tile widget-tile${editing ? ' editing' : ''}`}>
       {editing && (
         <div className="tile-actions">
+          <button type="button" className="icon-btn drag-handle" title="Drag">
+            ⠿
+          </button>
           <button type="button" className="icon-btn" onClick={onEdit} title="Edit">
             ✎
           </button>

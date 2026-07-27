@@ -48,6 +48,9 @@ export function ServiceTile({ service, editing, onEdit, onDelete }: Props) {
 
       {editing && (
         <div className="tile-actions" onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="icon-btn drag-handle" title="Drag">
+            ⠿
+          </button>
           <button type="button" className="icon-btn" onClick={onEdit} title="Edit">
             ✎
           </button>
