@@ -16,17 +16,18 @@ export function FolderTile({ folder, editing, onOpen, onEdit, onDelete }: Props)
   return (
     <div
       className={`tile folder-tile${editing ? ' editing' : ''}`}
-      onClick={() => {
-        if (!editing) onOpen()
-      }}
-      role={editing ? undefined : 'button'}
-      tabIndex={editing ? -1 : 0}
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
       onKeyDown={(e) => {
-        if (!editing && (e.key === 'Enter' || e.key === ' ')) onOpen()
+        if (e.key === 'Enter' || e.key === ' ') onOpen()
       }}
     >
       {editing && (
         <div className="tile-actions" onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="icon-btn" onClick={onOpen} title="Open folder">
+            ↗
+          </button>
           <button type="button" className="icon-btn" onClick={onEdit} title="Edit">
             ✎
           </button>
