@@ -1,23 +1,18 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { api } from '../api'
-import type { FolderItem, ServiceItem } from '../types'
+import type { FolderItem } from '../types'
 import { FileBrowseButton } from './FileBrowseButton'
 
 type Props = {
   open: boolean
-  initial?: ServiceItem | null
-  folders: FolderItem[]
-  defaultFolderId?: string | null
+  initial?: FolderItem | null
   onClose: () => void
   onSaved: () => void
 }
 
-export function ServiceModal({ open, initial, folders, defaultFolderId = null, onClose, onSaved }: Props) {
+export function FolderModal({ open, initial, onClose, onSaved }: Props) {
   const [title, setTitle] = useState('')
-  const [url, setUrl] = useState('')
-  const [healthUrl, setHealthUrl] = useState('')
-  const [folderId, setFolderId] = useState<string>('')
   const [imagePath, setImagePath] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -25,12 +20,9 @@ export function ServiceModal({ open, initial, folders, defaultFolderId = null, o
   useEffect(() => {
     if (!open) return
     setTitle(initial?.title ?? '')
-    setUrl(initial?.url ?? '')
-    setHealthUrl(initial?.healthUrl ?? '')
-    setFolderId(initial?.folderId ?? defaultFolderId ?? '')
     setImagePath(initial?.imagePath ?? null)
     setError(null)
-  }, [open, initial, defaultFolderId])
+  }, [open, initial])
 
   if (!open) return null
 
@@ -58,8 +50,6 @@ export function ServiceModal({ open, initial, folders, defaultFolderId = null, o
       const path = imagePath
       setImagePath(null)
       await api.deleteUpload(path).catch(() => undefined)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to remove image')
     } finally {
       setBusy(false)
     }
@@ -69,32 +59,21 @@ export function ServiceModal({ open, initial, folders, defaultFolderId = null, o
     e.preventDefault()
     setBusy(true)
     setError(null)
-    const resolvedFolderId = folderId || null
     try {
       if (initial) {
-        const previousImage = initial.imagePath
-        await api.updateService(initial.id, {
+        await api.updateFolder(initial.id, {
           title,
-          url,
-          healthUrl: healthUrl || null,
           imagePath,
-          folderId: resolvedFolderId,
           gridX: initial.gridX,
           gridY: initial.gridY,
           gridW: initial.gridW,
           gridH: initial.gridH,
           sortOrder: initial.sortOrder,
         })
-        if (previousImage && previousImage !== imagePath) {
-          await api.deleteUpload(previousImage).catch(() => undefined)
-        }
       } else {
-        await api.createService({
+        await api.createFolder({
           title,
-          url,
-          healthUrl: healthUrl || null,
           imagePath,
-          folderId: resolvedFolderId,
           gridX: 0,
           gridY: 0,
           gridW: 2,
@@ -113,38 +92,15 @@ export function ServiceModal({ open, initial, folders, defaultFolderId = null, o
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>{initial ? 'Edit service' : 'Add service'}</h2>
+        <h2>{initial ? 'Edit folder' : 'Add folder'}</h2>
         <form className="form-grid" onSubmit={submit}>
           <label>
             Title
             <input value={title} onChange={(e) => setTitle(e.target.value)} required />
           </label>
-          <label>
-            URL
-            <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." required />
-          </label>
-          <label>
-            Health check URL (optional)
-            <input
-              value={healthUrl}
-              onChange={(e) => setHealthUrl(e.target.value)}
-              placeholder="http://host:port or defaults to service URL"
-            />
-          </label>
-          <label>
-            Folder
-            <select value={folderId} onChange={(e) => setFolderId(e.target.value)}>
-              <option value="">Home (root)</option>
-              {folders.map((folder) => (
-                <option key={folder.id} value={folder.id}>
-                  {folder.title}
-                </option>
-              ))}
-            </select>
-          </label>
 
           <FileBrowseButton
-            label="Icon image"
+            label="Cover image (optional)"
             buttonText="Browse"
             accept="image/*,.svg,.gif"
             disabled={busy}
@@ -161,6 +117,7 @@ export function ServiceModal({ open, initial, folders, defaultFolderId = null, o
               </button>
             </div>
           )}
+
           {error && <div className="error">{error}</div>}
           <div className="modal-actions">
             <button type="button" className="btn" onClick={onClose}>

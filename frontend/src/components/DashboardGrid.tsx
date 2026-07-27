@@ -1,13 +1,15 @@
 import GridLayout, { type Layout } from 'react-grid-layout'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
-import type { ServiceItem, WidgetItem } from '../types'
+import type { FolderItem, ServiceItem, WidgetItem } from '../types'
 import { ServiceTile } from './ServiceTile'
 import { WidgetTile } from './WidgetTile'
+import { FolderTile } from './FolderTile'
 
 export type GridItem =
   | { kind: 'service'; data: ServiceItem }
   | { kind: 'widget'; data: WidgetItem }
+  | { kind: 'folder'; data: FolderItem }
 
 type Props = {
   items: GridItem[]
@@ -18,6 +20,9 @@ type Props = {
   onDeleteService: (item: ServiceItem) => void
   onEditWidget: (item: WidgetItem) => void
   onDeleteWidget: (item: WidgetItem) => void
+  onOpenFolder: (item: FolderItem) => void
+  onEditFolder: (item: FolderItem) => void
+  onDeleteFolder: (item: FolderItem) => void
 }
 
 export function DashboardGrid({
@@ -29,6 +34,9 @@ export function DashboardGrid({
   onDeleteService,
   onEditWidget,
   onDeleteWidget,
+  onOpenFolder,
+  onEditFolder,
+  onDeleteFolder,
 }: Props) {
   const layout: Layout[] = items.map((item) => ({
     i: `${item.kind}:${item.data.id}`,
@@ -44,8 +52,8 @@ export function DashboardGrid({
     return (
       <div className="empty-hint">
         {editing
-          ? 'Add a service or widget from the toolbar to start building your home page.'
-          : 'No tiles yet. Sign in to add services and widgets.'}
+          ? 'Add a service, folder or widget from the toolbar to start building your home page.'
+          : 'No tiles yet. Sign in to add services, folders and widgets.'}
       </div>
     )
   }
@@ -68,19 +76,29 @@ export function DashboardGrid({
     >
       {items.map((item) => (
         <div key={`${item.kind}:${item.data.id}`}>
-          {item.kind === 'service' ? (
+          {item.kind === 'service' && (
             <ServiceTile
               service={item.data}
               editing={editing}
               onEdit={() => onEditService(item.data)}
               onDelete={() => onDeleteService(item.data)}
             />
-          ) : (
+          )}
+          {item.kind === 'widget' && (
             <WidgetTile
               widget={item.data}
               editing={editing}
               onEdit={() => onEditWidget(item.data)}
               onDelete={() => onDeleteWidget(item.data)}
+            />
+          )}
+          {item.kind === 'folder' && (
+            <FolderTile
+              folder={item.data}
+              editing={editing}
+              onOpen={() => onOpenFolder(item.data)}
+              onEdit={() => onEditFolder(item.data)}
+              onDelete={() => onDeleteFolder(item.data)}
             />
           )}
         </div>

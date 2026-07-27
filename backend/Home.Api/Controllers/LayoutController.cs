@@ -16,9 +16,11 @@ public class LayoutController(AppDbContext db) : ControllerBase
     {
         var serviceIds = request.Items.Where(i => i.Kind == "service").Select(i => i.Id).ToHashSet();
         var widgetIds = request.Items.Where(i => i.Kind == "widget").Select(i => i.Id).ToHashSet();
+        var folderIds = request.Items.Where(i => i.Kind == "folder").Select(i => i.Id).ToHashSet();
 
         var services = await db.Services.Where(s => serviceIds.Contains(s.Id)).ToListAsync(ct);
         var widgets = await db.Widgets.Where(w => widgetIds.Contains(w.Id)).ToListAsync(ct);
+        var folders = await db.Folders.Where(f => folderIds.Contains(f.Id)).ToListAsync(ct);
 
         foreach (var item in request.Items)
         {
@@ -39,6 +41,15 @@ public class LayoutController(AppDbContext db) : ControllerBase
                 w.GridY = item.GridY;
                 w.GridW = Math.Max(1, item.GridW);
                 w.GridH = Math.Max(1, item.GridH);
+            }
+            else if (item.Kind == "folder")
+            {
+                var f = folders.FirstOrDefault(x => x.Id == item.Id);
+                if (f is null) continue;
+                f.GridX = item.GridX;
+                f.GridY = item.GridY;
+                f.GridW = Math.Max(1, item.GridW);
+                f.GridH = Math.Max(1, item.GridH);
             }
         }
 

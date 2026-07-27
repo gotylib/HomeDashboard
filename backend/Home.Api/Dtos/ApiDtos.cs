@@ -6,10 +6,42 @@ public record MeResponse(string Username);
 
 public record DashboardDto(
     WallpaperDto Wallpaper,
+    IReadOnlyList<FolderDto> Folders,
     IReadOnlyList<ServiceDto> Services,
     IReadOnlyList<WidgetDto> Widgets);
 
 public record WallpaperDto(string? Path, string Type);
+
+public record FolderDto(
+    Guid Id,
+    string Title,
+    string? ImagePath,
+    int GridX,
+    int GridY,
+    int GridW,
+    int GridH,
+    int SortOrder,
+    int ServiceCount,
+    IReadOnlyList<FolderPreviewItemDto> Preview);
+
+public record FolderPreviewItemDto(Guid Id, string Title, string? ImagePath);
+
+public record CreateFolderRequest(
+    string Title,
+    string? ImagePath,
+    int GridX,
+    int GridY,
+    int GridW,
+    int GridH);
+
+public record UpdateFolderRequest(
+    string Title,
+    string? ImagePath,
+    int GridX,
+    int GridY,
+    int GridW,
+    int GridH,
+    int SortOrder);
 
 public record ServiceDto(
     Guid Id,
@@ -17,6 +49,7 @@ public record ServiceDto(
     string Url,
     string? ImagePath,
     string? HealthUrl,
+    Guid? FolderId,
     int GridX,
     int GridY,
     int GridW,
@@ -30,6 +63,7 @@ public record CreateServiceRequest(
     string Url,
     string? ImagePath,
     string? HealthUrl,
+    Guid? FolderId,
     int GridX,
     int GridY,
     int GridW,
@@ -40,6 +74,7 @@ public record UpdateServiceRequest(
     string Url,
     string? ImagePath,
     string? HealthUrl,
+    Guid? FolderId,
     int GridX,
     int GridY,
     int GridW,

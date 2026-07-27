@@ -30,12 +30,19 @@ public class ServicesController(
     [HttpPost]
     public async Task<ActionResult<ServiceDto>> Create([FromBody] CreateServiceRequest request, CancellationToken ct)
     {
+        if (request.FolderId is Guid folderId
+            && !await db.Folders.AnyAsync(f => f.Id == folderId, ct))
+        {
+            return BadRequest(new { message = "Folder not found" });
+        }
+
         var entity = new ServiceLink
         {
             Title = request.Title.Trim(),
             Url = request.Url.Trim(),
             ImagePath = request.ImagePath,
             HealthUrl = string.IsNullOrWhiteSpace(request.HealthUrl) ? null : request.HealthUrl.Trim(),
+            FolderId = request.FolderId,
             GridX = request.GridX,
             GridY = request.GridY,
             GridW = Math.Max(1, request.GridW),
@@ -70,11 +77,18 @@ public class ServicesController(
         var entity = await db.Services.Include(s => s.HealthStatus).FirstOrDefaultAsync(s => s.Id == id, ct);
         if (entity is null) return NotFound();
 
+        if (request.FolderId is Guid folderId
+            && !await db.Folders.AnyAsync(f => f.Id == folderId, ct))
+        {
+            return BadRequest(new { message = "Folder not found" });
+        }
+
         var previousImage = entity.ImagePath;
         entity.Title = request.Title.Trim();
         entity.Url = request.Url.Trim();
         entity.ImagePath = request.ImagePath;
         entity.HealthUrl = string.IsNullOrWhiteSpace(request.HealthUrl) ? null : request.HealthUrl.Trim();
+        entity.FolderId = request.FolderId;
         entity.GridX = request.GridX;
         entity.GridY = request.GridY;
         entity.GridW = Math.Max(1, request.GridW);
@@ -148,6 +162,7 @@ public class ServicesController(
         s.Url,
         s.ImagePath,
         s.HealthUrl,
+        s.FolderId,
         s.GridX,
         s.GridY,
         s.GridW,

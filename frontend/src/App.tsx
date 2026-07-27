@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Layout } from 'react-grid-layout'
 import { api } from './api'
-import type { Dashboard, ServiceItem, WidgetItem } from './types'
+import type { Dashboard, FolderItem, ServiceItem, WidgetItem } from './types'
 import { WallpaperBackground } from './components/WallpaperBackground'
 import { DashboardGrid, type GridItem } from './components/DashboardGrid'
 import { LoginModal } from './components/LoginModal'
 import { ServiceModal } from './components/ServiceModal'
 import { WidgetModal } from './components/WidgetModal'
+import { FolderModal } from './components/FolderModal'
+import { FolderView } from './components/FolderView'
 import { FileBrowseButton } from './components/FileBrowseButton'
 
 function detectWallpaperType(path: string, contentType: string) {
@@ -23,6 +25,8 @@ export default function App() {
   const [loginOpen, setLoginOpen] = useState(false)
   const [serviceModal, setServiceModal] = useState<ServiceItem | null | 'new'>(null)
   const [widgetModal, setWidgetModal] = useState<WidgetItem | null | 'new'>(null)
+  const [folderModal, setFolderModal] = useState<FolderItem | null | 'new'>(null)
+  const [openFolderId, setOpenFolderId] = useState<string | null>(null)
   const [layoutDirty, setLayoutDirty] = useState(false)
   const [pendingLayout, setPendingLayout] = useState<Layout[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -65,10 +69,23 @@ export default function App() {
     return () => window.clearInterval(id)
   }, [dashboard, editing])
 
+  const openFolder = useMemo(
+    () => dashboard?.folders.find((f) => f.id === openFolderId) ?? null,
+    [dashboard, openFolderId],
+  )
+
+  const folderServices = useMemo(() => {
+    if (!dashboard || !openFolderId) return []
+    return dashboard.services.filter((s) => s.folderId === openFolderId)
+  }, [dashboard, openFolderId])
+
   const items: GridItem[] = useMemo(() => {
     if (!dashboard) return []
     return [
-      ...dashboard.services.map((s) => ({ kind: 'service' as const, data: s })),
+      ...dashboard.folders.map((f) => ({ kind: 'folder' as const, data: f })),
+      ...dashboard.services
+        .filter((s) => !s.folderId)
+        .map((s) => ({ kind: 'service' as const, data: s })),
       ...dashboard.widgets.map((w) => ({ kind: 'widget' as const, data: w })),
     ]
   }, [dashboard])
@@ -164,6 +181,9 @@ export default function App() {
                   <button type="button" className="btn" onClick={() => setServiceModal('new')}>
                     + Service
                   </button>
+                  <button type="button" className="btn" onClick={() => setFolderModal('new')}>
+                    + Folder
+                  </button>
                   <button type="button" className="btn" onClick={() => setWidgetModal('new')}>
                     + Widget
                   </button>
@@ -230,15 +250,54 @@ export default function App() {
                 .then(load)
                 .catch((e) => setError(e instanceof Error ? e.message : 'Delete failed'))
             }}
+            onOpenFolder={(f) => setOpenFolderId(f.id)}
+            onEditFolder={(f) => setFolderModal(f)}
+            onDeleteFolder={(f) => {
+              if (!confirm(`Delete folder "${f.title}"? Services inside will move to Home.`)) return
+              void api
+                .deleteFolder(f.id)
+                .then(async () => {
+                  if (openFolderId === f.id) setOpenFolderId(null)
+                  await load()
+                })
+                .catch((e) => setError(e instanceof Error ? e.message : 'Delete failed'))
+            }}
           />
         )}
       </main>
+
+      {openFolder && (
+        <FolderView
+          folder={openFolder}
+          services={folderServices}
+          editing={editing}
+          onClose={() => setOpenFolderId(null)}
+          onEditService={(s) => setServiceModal(s)}
+          onDeleteService={(s) => {
+            if (!confirm(`Delete service "${s.title}"?`)) return
+            void api
+              .deleteService(s.id)
+              .then(load)
+              .catch((e) => setError(e instanceof Error ? e.message : 'Delete failed'))
+          }}
+          onAddService={() => setServiceModal('new')}
+          onEditFolder={() => setFolderModal(openFolder)}
+        />
+      )}
 
       <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} onLogin={onLogin} />
       <ServiceModal
         open={serviceModal !== null}
         initial={serviceModal === 'new' ? null : serviceModal}
+        folders={dashboard?.folders ?? []}
+        defaultFolderId={serviceModal === 'new' ? openFolderId : null}
         onClose={() => setServiceModal(null)}
+        onSaved={() => void load()}
+      />
+      <FolderModal
+        open={folderModal !== null}
+        initial={folderModal === 'new' ? null : folderModal}
+        onClose={() => setFolderModal(null)}
         onSaved={() => void load()}
       />
       <WidgetModal

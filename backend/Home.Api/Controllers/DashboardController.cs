@@ -15,6 +15,30 @@ public class DashboardController(AppDbContext db) : ControllerBase
         var settings = await db.Settings.AsNoTracking().FirstOrDefaultAsync(ct)
                        ?? new Models.AppSettings();
 
+        var folders = await db.Folders
+            .AsNoTracking()
+            .Include(f => f.Services)
+            .OrderBy(f => f.SortOrder)
+            .ThenBy(f => f.Title)
+            .ToListAsync(ct);
+
+        var folderDtos = folders.Select(f => new FolderDto(
+            f.Id,
+            f.Title,
+            f.ImagePath,
+            f.GridX,
+            f.GridY,
+            f.GridW,
+            f.GridH,
+            f.SortOrder,
+            f.Services.Count,
+            f.Services
+                .OrderBy(s => s.SortOrder)
+                .ThenBy(s => s.Title)
+                .Take(4)
+                .Select(s => new FolderPreviewItemDto(s.Id, s.Title, s.ImagePath))
+                .ToList())).ToList();
+
         var services = await db.Services
             .AsNoTracking()
             .Include(s => s.HealthStatus)
@@ -26,6 +50,7 @@ public class DashboardController(AppDbContext db) : ControllerBase
                 s.Url,
                 s.ImagePath,
                 s.HealthUrl,
+                s.FolderId,
                 s.GridX,
                 s.GridY,
                 s.GridW,
@@ -51,6 +76,7 @@ public class DashboardController(AppDbContext db) : ControllerBase
 
         return Ok(new DashboardDto(
             new WallpaperDto(settings.WallpaperPath, settings.WallpaperType),
+            folderDtos,
             services,
             widgets));
     }

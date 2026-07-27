@@ -8,6 +8,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<User> Users => Set<User>();
     public DbSet<AppSettings> Settings => Set<AppSettings>();
     public DbSet<ServiceLink> Services => Set<ServiceLink>();
+    public DbSet<Folder> Folders => Set<Folder>();
     public DbSet<Widget> Widgets => Set<Widget>();
     public DbSet<HealthStatus> HealthStatuses => Set<HealthStatus>();
 
@@ -24,12 +25,22 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasData(new AppSettings { Id = 1, WallpaperType = "none" });
         });
 
+        modelBuilder.Entity<Folder>(e =>
+        {
+            e.Property(x => x.Title).HasMaxLength(200);
+            e.Property(x => x.ImagePath).HasMaxLength(500);
+        });
+
         modelBuilder.Entity<ServiceLink>(e =>
         {
             e.Property(x => x.Title).HasMaxLength(200);
             e.Property(x => x.Url).HasMaxLength(2000);
             e.Property(x => x.HealthUrl).HasMaxLength(2000);
             e.Property(x => x.ImagePath).HasMaxLength(500);
+            e.HasOne(x => x.Folder)
+                .WithMany(x => x.Services)
+                .HasForeignKey(x => x.FolderId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Widget>(e =>

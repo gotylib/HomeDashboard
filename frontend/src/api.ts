@@ -1,4 +1,4 @@
-import type { Dashboard, ServiceItem, WidgetItem, Wallpaper } from './types'
+import type { Dashboard, ServiceItem, WidgetItem, FolderItem, Wallpaper } from './types'
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -49,6 +49,13 @@ export const api = {
     request<ServiceItem>(`/api/services/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   deleteService: (id: string) =>
     request<void>(`/api/services/${id}`, { method: 'DELETE' }),
+
+  createFolder: (body: object) =>
+    request<FolderItem>('/api/folders', { method: 'POST', body: JSON.stringify(body) }),
+  updateFolder: (id: string, body: object) =>
+    request<FolderItem>(`/api/folders/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+  deleteFolder: (id: string) =>
+    request<void>(`/api/folders/${id}`, { method: 'DELETE' }),
 
   createWidget: (body: object) =>
     request<WidgetItem>('/api/widgets', { method: 'POST', body: JSON.stringify(body) }),

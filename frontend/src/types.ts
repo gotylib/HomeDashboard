@@ -3,12 +3,32 @@ export type Wallpaper = {
   type: string
 }
 
+export type FolderPreviewItem = {
+  id: string
+  title: string
+  imagePath: string | null
+}
+
+export type FolderItem = {
+  id: string
+  title: string
+  imagePath: string | null
+  gridX: number
+  gridY: number
+  gridW: number
+  gridH: number
+  sortOrder: number
+  serviceCount: number
+  preview: FolderPreviewItem[]
+}
+
 export type ServiceItem = {
   id: string
   title: string
   url: string
   imagePath: string | null
   healthUrl: string | null
+  folderId: string | null
   gridX: number
   gridY: number
   gridW: number
@@ -30,6 +50,7 @@ export type WidgetItem = {
 
 export type Dashboard = {
   wallpaper: Wallpaper
+  folders: FolderItem[]
   services: ServiceItem[]
   widgets: WidgetItem[]
 }
