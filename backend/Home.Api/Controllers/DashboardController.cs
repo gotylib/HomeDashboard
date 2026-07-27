@@ -12,8 +12,23 @@ public class DashboardController(AppDbContext db) : ControllerBase
     [HttpGet]
     public async Task<ActionResult<DashboardDto>> Get(CancellationToken ct)
     {
-        var settings = await db.Settings.AsNoTracking().FirstOrDefaultAsync(ct)
-                       ?? new Models.AppSettings();
+        var settings = await db.Settings.AsNoTracking()
+            .Select(s => new
+            {
+                s.WallpaperPath,
+                s.WallpaperType,
+                s.WallpaperUpdatedAt,
+                HasBlob = s.WallpaperData != null && s.WallpaperData.Length > 0
+            })
+            .FirstOrDefaultAsync(ct);
+
+        var wallpaper = settings is null
+            ? new WallpaperDto(null, "none")
+            : SettingsController.ToDto(
+                settings.WallpaperPath,
+                settings.WallpaperType,
+                settings.WallpaperUpdatedAt,
+                settings.HasBlob);
 
         var folders = await db.Folders
             .AsNoTracking()
@@ -75,7 +90,7 @@ public class DashboardController(AppDbContext db) : ControllerBase
             .ToListAsync(ct);
 
         return Ok(new DashboardDto(
-            new WallpaperDto(settings.WallpaperPath, settings.WallpaperType),
+            wallpaper,
             folderDtos,
             services,
             widgets));

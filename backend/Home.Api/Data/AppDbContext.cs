@@ -22,6 +22,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         modelBuilder.Entity<AppSettings>(e =>
         {
+            e.Property(x => x.WallpaperContentType).HasMaxLength(200);
             e.HasData(new AppSettings { Id = 1, WallpaperType = "none" });
         });
 

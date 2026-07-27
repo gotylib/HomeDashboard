@@ -11,13 +11,6 @@ import { FolderModal } from './components/FolderModal'
 import { FolderView } from './components/FolderView'
 import { FileBrowseButton } from './components/FileBrowseButton'
 
-function detectWallpaperType(path: string, contentType: string) {
-  const lower = path.toLowerCase()
-  if (lower.endsWith('.mp4') || lower.endsWith('.webm') || contentType.startsWith('video/')) return 'video'
-  if (lower.endsWith('.gif')) return 'gif'
-  return 'image'
-}
-
 export default function App() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null)
   const [user, setUser] = useState<string | null>(null)
@@ -130,9 +123,7 @@ export default function App() {
     if (!file) return
     setSaving(true)
     try {
-      const uploaded = await api.upload(file)
-      const type = detectWallpaperType(uploaded.path, uploaded.contentType)
-      await api.setWallpaper(uploaded.path, type)
+      await api.uploadWallpaper(file)
       await load()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Wallpaper upload failed')

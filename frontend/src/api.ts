@@ -73,6 +73,16 @@ export const api = {
       body: JSON.stringify({ path, type }),
     }),
 
+  uploadWallpaper: async (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return request<Wallpaper>('/api/settings/wallpaper', {
+      method: 'POST',
+      body: form,
+      headers: {},
+    })
+  },
+
   clearWallpaper: () => request<Wallpaper>('/api/settings/wallpaper', { method: 'DELETE' }),
 
   upload: async (file: File) => {
