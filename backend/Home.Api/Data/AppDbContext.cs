@@ -11,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Folder> Folders => Set<Folder>();
     public DbSet<Widget> Widgets => Set<Widget>();
     public DbSet<HealthStatus> HealthStatuses => Set<HealthStatus>();
+    public DbSet<MediaAsset> MediaAssets => Set<MediaAsset>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -18,6 +19,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         {
             e.HasIndex(x => x.Username).IsUnique();
             e.Property(x => x.Username).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<MediaAsset>(e =>
+        {
+            e.Property(x => x.ContentType).HasMaxLength(200);
+            e.Property(x => x.FileName).HasMaxLength(260);
+            e.Property(x => x.Data).HasColumnType("bytea");
         });
 
         modelBuilder.Entity<AppSettings>(e =>

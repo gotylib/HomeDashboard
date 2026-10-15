@@ -38,6 +38,7 @@ builder.Services.AddDbContext<AppDbContext>(opt =>
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<DbSeeder>();
 builder.Services.AddSingleton<UploadService>();
+builder.Services.AddSingleton<WeatherService>();
 builder.Services.AddHttpClient("health", client =>
 {
     client.Timeout = TimeSpan.FromSeconds(10);
@@ -46,6 +47,12 @@ builder.Services.AddHttpClient("health", client =>
 {
     AllowAutoRedirect = false,
     ConnectTimeout = TimeSpan.FromSeconds(5)
+});
+builder.Services.AddHttpClient("weather", client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(12);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("HomeDashboard/1.0 (+https://github.com/gotylib/HomeDashboard)");
+    client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
 });
 builder.Services.AddHostedService<HealthCheckWorker>();
 
@@ -95,6 +102,10 @@ using (var scope = app.Services.CreateScope())
 {
     var seeder = scope.ServiceProvider.GetRequiredService<DbSeeder>();
     await seeder.SeedAsync();
+
+    // One-time: move leftover /uploads files into Postgres MediaAssets.
+    var uploads = scope.ServiceProvider.GetRequiredService<UploadService>();
+    await uploads.MigrateDiskUploadsToDatabaseAsync();
 }
 
 if (app.Environment.IsDevelopment())

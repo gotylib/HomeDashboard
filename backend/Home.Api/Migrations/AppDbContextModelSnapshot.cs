@@ -110,6 +110,33 @@ namespace Home.Api.Migrations
                     b.ToTable("HealthStatuses");
                 });
 
+            modelBuilder.Entity("Home.Api.Models.MediaAsset", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<byte[]>("Data")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("FileName")
+                        .HasMaxLength(260)
+                        .HasColumnType("character varying(260)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MediaAssets");
+                });
+
             modelBuilder.Entity("Home.Api.Models.ServiceLink", b =>
                 {
                     b.Property<Guid>("Id")

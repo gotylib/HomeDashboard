@@ -63,7 +63,7 @@ Vite: http://localhost:5173 (proxies `/api` and `/uploads` to the API).
 | Type | Description |
 |------|-------------|
 | `clock` | Local/timezone clock |
-| `weather` | Open-Meteo by city |
+| `weather` | Open-Meteo (fallback: wttr.in) via `/api/weather` |
 | `notes` | Sticky note text |
 | `search` | DuckDuckGo / Google / Bing |
 | `countdown` | Countdown to a date/time |
@@ -139,4 +139,4 @@ See [`.env.example`](.env.example).
 
 - Uploaded files live in `uploads/` (Docker volume).
 - Change `ADMIN_PASSWORD` and `JWT_KEY` before exposing on a network.
-- Weather uses public Open-Meteo APIs from the browser (no API key).
+- Weather is proxied by the API (`/api/weather`): Open-Meteo first, then wttr.in if Open-Meteo is unreachable.

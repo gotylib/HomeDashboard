@@ -8,38 +8,8 @@ type Props = {
 type WeatherState = {
   temp: number
   wind: number
-  code: number
+  condition: string
   city: string
-}
-
-const WMO: Record<number, string> = {
-  0: 'Clear',
-  1: 'Mainly clear',
-  2: 'Partly cloudy',
-  3: 'Overcast',
-  45: 'Fog',
-  48: 'Fog',
-  51: 'Drizzle',
-  61: 'Rain',
-  71: 'Snow',
-  80: 'Showers',
-  95: 'Thunderstorm',
-}
-
-async function resolveCoords(config: WeatherConfig): Promise<{ lat: number; lon: number; city: string }> {
-  if (config.latitude != null && config.longitude != null) {
-    return { lat: config.latitude, lon: config.longitude, city: config.city || 'Custom' }
-  }
-
-  const city = config.city?.trim() || 'Moscow'
-  const geo = await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`,
-  )
-  if (!geo.ok) throw new Error('Geocoding failed')
-  const data = await geo.json()
-  const hit = data.results?.[0]
-  if (!hit) throw new Error(`City not found: ${city}`)
-  return { lat: hit.latitude, lon: hit.longitude, city: hit.name }
 }
 
 export function WeatherWidget({ config }: Props) {
@@ -52,18 +22,38 @@ export function WeatherWidget({ config }: Props) {
     async function load() {
       try {
         setError(null)
-        const { lat, lon, city } = await resolveCoords(config)
-        const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code,wind_speed_10m`,
-        )
-        if (!res.ok) throw new Error('Weather request failed')
-        const data = await res.json()
+        const params = new URLSearchParams()
+        if (config.latitude != null && config.longitude != null) {
+          params.set('lat', String(config.latitude))
+          params.set('lon', String(config.longitude))
+        }
+        if (config.city?.trim()) params.set('city', config.city.trim())
+
+        const res = await fetch(`/api/weather?${params.toString()}`, { credentials: 'include' })
+        if (!res.ok) {
+          let message = 'Weather request failed'
+          try {
+            const body = (await res.json()) as { message?: string }
+            if (body.message) message = body.message
+          } catch {
+            /* ignore */
+          }
+          throw new Error(message)
+        }
+
+        const data = (await res.json()) as {
+          city: string
+          temperatureC: number
+          windKmh: number
+          condition: string
+        }
+
         if (cancelled) return
         setState({
-          temp: data.current.temperature_2m,
-          wind: data.current.wind_speed_10m,
-          code: data.current.weather_code,
-          city,
+          temp: data.temperatureC,
+          wind: data.windKmh,
+          condition: data.condition,
+          city: data.city,
         })
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load weather')
@@ -87,7 +77,7 @@ export function WeatherWidget({ config }: Props) {
         <>
           <div className="weather-temp">{Math.round(state.temp)}°</div>
           <div className="weather-meta">
-            {state.city} · {WMO[state.code] ?? 'Weather'} · wind {Math.round(state.wind)} km/h
+            {state.city} · {state.condition} · wind {Math.round(state.wind)} km/h
           </div>
         </>
       )}
